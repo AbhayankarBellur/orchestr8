@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ExecutionAgentOutput",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "actions",
+    "artifacts",
+    "verification_plan",
+    "reasoning"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "action_id",
+          "action_type",
+          "description",
+          "payload",
+          "depends_on",
+          "requires_approval",
+          "verification_steps"
+        ],
+        "properties": {
+          "action_id": { "type": "string" },
+          "action_type": {
+            "type": "string",
+            "enum": [
+              "create_task",
+              "add_dependency",
+              "generate_dashboard",
+              "generate_pdf"
+            ]
+          },
+          "description": { "type": "string" },
+          "payload": { "type": "object" },
+          "depends_on": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "requires_approval": { "type": "boolean" },
+          "verification_steps": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "purpose"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["dashboard", "pdf"]
+          },
+          "purpose": { "type": "string" }
+        }
+      }
+    },
+    "verification_plan": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "reasoning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "evidence", "assumptions", "risks", "alternatives"],
+      "properties": {
+        "summary": { "type": "string" },
+        "evidence": { "type": "array", "items": { "type": "string" } },
+        "assumptions": { "type": "array", "items": { "type": "string" } },
+        "risks": { "type": "array", "items": { "type": "string" } },
+        "alternatives": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

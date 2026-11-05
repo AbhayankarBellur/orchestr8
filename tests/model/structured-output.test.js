@@ -1,12 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
 
-vi.mock("../../src/llm/ollama.client.js", () => ({
+vi.mock("../../src/llm/openrouter.client.js", () => ({
   chat: vi.fn().mockResolvedValue({
-    message: { content: '{"status":"complete","count":3}' },
-    eval_count: 8,
-    eval_duration: 400000000
-  }),
-  checkOllama: vi.fn()
+    choices: [{ message: { content: '{"status":"complete","count":3}' } }],
+    usage: { prompt_tokens: 15, completion_tokens: 8 }
+  })
 }));
 
 import { structured } from "../../src/llm/model.service.js";
@@ -26,9 +24,10 @@ describe("Structured inference", () => {
   });
 
   it("rejects invalid JSON", async () => {
-    const { chat } = await import("../../src/llm/ollama.client.js");
+    const { chat } = await import("../../src/llm/openrouter.client.js");
     chat.mockResolvedValueOnce({
-      message: { content: "not valid json" }
+      choices: [{ message: { content: "not valid json" } }],
+      usage: {}
     });
     await expect(
       structured("Return JSON", { type: "object" })

@@ -1,0 +1,11 @@
+import express from "express";
+import healthRoutes from "./routes/health.routes.js";
+import { errorMiddleware } from "./middleware/error.middleware.js";
+
+const app = express();
+
+app.use(express.json({ limit: "1mb" }));
+app.use("/health", healthRoutes);
+app.use(errorMiddleware);
+
+export default app;

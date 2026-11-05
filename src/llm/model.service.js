@@ -19,13 +19,18 @@ export async function infer(prompt, system = "") {
   return { model: MODEL_CONFIG.model, response: result.content, metrics: result.metrics };
 }
 
-export async function structured(prompt, schema) {
+export async function structuredRaw(prompt, schema) {
   const instruction = `Return JSON matching this schema:\n${JSON.stringify(schema)}`;
   const result = await request([
     { role: "system", content: instruction },
     { role: "user", content: prompt }
   ], { type: "json_object" });
-  return { model: MODEL_CONFIG.model, response: JSON.parse(clean(result.content)), metrics: result.metrics };
+  return { model: MODEL_CONFIG.model, content: clean(result.content), metrics: result.metrics };
+}
+
+export async function structured(prompt, schema) {
+  const raw = await structuredRaw(prompt, schema);
+  return { model: raw.model, response: JSON.parse(raw.content), metrics: raw.metrics };
 }
 
 export async function status() {

@@ -3,7 +3,7 @@ export function errorMiddleware(error, req, res, next) {
 
   res.status(status).json({
     success: false,
-    error: {
+    error: error.payload || {
       message: status === 500
         ? "Internal server error"
         : error.message

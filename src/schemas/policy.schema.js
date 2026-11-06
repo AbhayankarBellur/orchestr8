@@ -4,7 +4,8 @@ export const ScopeSchema = z.object({
   type: z.enum(["execution", "agent", "tool", "server", "action", "input", "output"]),
   server: z.string().optional(),
   tool: z.string().optional(),
-  agent: z.string().optional()
+  agent: z.string().optional(),
+  action: z.string().optional()
 });
 
 export const ConditionSchema = z.object({
@@ -21,7 +22,7 @@ export const PolicySchema = z.object({
   enabled: z.boolean().default(true),
   scope: ScopeSchema,
   condition: ConditionSchema,
-  enforcement: z.enum(["allow", "deny", "require_approval", "warn", "redact"]),
+  enforcement: z.enum(["allow", "deny", "require_approval", "warn"]),
   severity: z.enum(["low", "medium", "high", "critical"]).default("medium"),
   reason: z.string().min(1),
   priority: z.number().int().default(100)

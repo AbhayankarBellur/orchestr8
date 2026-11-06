@@ -3,10 +3,14 @@ import { DEFAULT_POLICIES } from "../governance/default.policies.js";
 
 const store = new Map(), history = new Map();
 
+export function seedPolicies() {
+  for (const p of DEFAULT_POLICIES) if (!store.has(p.policy_id)) store.set(p.policy_id, { ...p });
+}
+
 function init() {
   store.clear();
   history.clear();
-  for (const p of DEFAULT_POLICIES) store.set(p.policy_id, { ...p });
+  seedPolicies();
 }
 init();
 

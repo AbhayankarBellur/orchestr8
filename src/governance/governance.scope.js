@@ -9,13 +9,15 @@ export function matchesScope(scope, proposal, context = {}) {
     case "server":
       return !scope.server || scope.server === server;
     case "tool":
-      const toolMatch = !scope.tool || scope.tool === toolName;
-      const serverMatch = !scope.server || scope.server === server;
-      return toolMatch && serverMatch;
+      return (!scope.tool || scope.tool === toolName) && (!scope.server || scope.server === server);
     case "agent":
       return !scope.agent || scope.agent === context.agent;
     case "action":
       return !scope.action || scope.action === context.action || scope.action === toolName;
+    case "input":
+      return (!scope.tool || scope.tool === toolName) && (!scope.server || scope.server === server);
+    case "output":
+      return context.output !== undefined && (!scope.tool || scope.tool === toolName) && (!scope.server || scope.server === server);
     default:
       return false;
   }

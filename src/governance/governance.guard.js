@@ -26,7 +26,7 @@ export function enforceGovernance(proposal, context = {}, snapshot = null) {
 export function enforceOrBlock(proposal, context = {}, snapshot = null) {
   const result = enforceGovernance(proposal, context, snapshot);
   if (!result.can_proceed) {
-    const blocking = result.results.find(r => r.result === "VIOLATED" || r.result === "APPROVAL_REQUIRED");
+    const blocking = result.results.find(r => r.result === "VIOLATED" || r.result === "APPROVAL_REQUIRED" || r.result === "NOT_EVALUATED");
     const err = new Error(`Governance blocked: ${blocking?.reason || result.status}`);
     err.name = "GovernanceBlockError";
     err.status = 403;

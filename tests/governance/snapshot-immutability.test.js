@@ -4,10 +4,7 @@ import { updatePolicy, resetPolicies } from "../../src/repositories/policy.repos
 import { enforceGovernance } from "../../src/governance/governance.guard.js";
 
 describe("Policy Snapshot Immutability", () => {
-  beforeEach(() => {
-    resetPolicies();
-    clearSnapshots();
-  });
+  beforeEach(() => { resetPolicies(); clearSnapshots(); });
 
   it("creates immutable snapshot with hash", () => {
     const snap = createPolicySnapshot();
@@ -17,12 +14,18 @@ describe("Policy Snapshot Immutability", () => {
     expect(getSnapshot(snap.snapshot_id)).toBe(snap);
   });
 
+  it("prevents direct mutation of snapshot object and policy definitions", () => {
+    const snap = createPolicySnapshot();
+    expect(Object.isFrozen(snap)).toBe(true);
+    expect(Object.isFrozen(snap.policies)).toBe(true);
+    expect(Object.isFrozen(snap.policies[0])).toBe(true);
+    expect(() => { snap.policies[0].enabled = false; }).toThrow();
+  });
+
   it("remains immutable when policy is modified later", () => {
     const snap = createPolicySnapshot();
     const originalCount = snap.policies.length;
-
     updatePolicy("task-create-approval", { enabled: false });
-
     expect(snap.policies.length).toBe(originalCount);
     const snapPolicy = snap.policies.find(p => p.policy_id === "task-create-approval");
     expect(snapPolicy.enabled).toBe(true);

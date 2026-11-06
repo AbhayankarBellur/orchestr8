@@ -5,14 +5,16 @@ const snapshots = new Map();
 
 export function createPolicySnapshot() {
   const policies = listPolicies({ enabled: true });
-  const snapshotPolicies = policies.map(p => ({
+  const snapshotPolicies = policies.map(p => Object.freeze({
     policy_id: p.policy_id,
     version: p.version,
     name: p.name,
-    scope: p.scope,
-    condition: p.condition,
+    scope: Object.freeze({ ...p.scope }),
+    condition: Object.freeze({ ...p.condition }),
     enforcement: p.enforcement,
     severity: p.severity,
+    reason: p.reason,
+    priority: p.priority,
     enabled: p.enabled
   }));
 
@@ -24,7 +26,7 @@ export function createPolicySnapshot() {
     snapshot_id,
     hash,
     created_at: new Date().toISOString(),
-    policies: snapshotPolicies.map(p => Object.freeze({ ...p }))
+    policies: Object.freeze(snapshotPolicies)
   });
 
   snapshots.set(snapshot_id, snapshot);

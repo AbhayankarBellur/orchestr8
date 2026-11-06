@@ -1,5 +1,5 @@
 export function errorMiddleware(error, req, res, next) {
-  const status = error.status || 500;
+  const status = error.status || error.statusCode || 500;
 
   res.status(status).json({
     success: false,

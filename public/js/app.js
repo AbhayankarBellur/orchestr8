@@ -1,50 +1,53 @@
-import { fetchExecutions, fetchExecution, fetchEvents, createExecution, approveRequest, rejectRequest, resumeExecution, connectSse } from "./api.js";
-import { buildNodes, renderNodes } from "./nodes.js";
+import { fetchExecutions, fetchExecution, createExecution, approveRequest, rejectRequest, resumeExecution } from "./api.js";
+import { getWorkflow } from "./workflows.js";
+import { renderNodes } from "./nodes.js";
 import { renderInspector } from "./inspector.js";
 import { renderApprovalBar } from "./approval.js";
+import { clearLogs } from "./console.js";
+import { subscribeExecutionStream } from "./stream.js";
 
-let state = { exec: null, events: [], nodes: [], selIdx: 0, sseCleanup: null };
+let state = { wfId: "wf-1", exec: null, nodes: [], selIdx: 0, sseCleanup: null };
 
-async function selectExec(id) {
+export function selectWorkflow(id) {
   if (state.sseCleanup) state.sseCleanup();
-  state.exec = await fetchExecution(id);
-  state.events = await fetchEvents(id);
-  refreshUI();
-  state.sseCleanup = connectSse(id, evt => {
-    state.events.push(evt);
-    if (evt.event_type.startsWith("EXECUTION_") || evt.event_type.startsWith("APPROVAL_")) {
-      fetchExecution(id).then(e => { state.exec = e; refreshUI(); });
-    } else { refreshUI(); }
+  state.wfId = id;
+  const wf = getWorkflow(id);
+  state.nodes = wf.nodes;
+  state.selIdx = 0;
+  state.exec = null;
+  clearLogs();
+  document.getElementById("prompt-input").value = wf.prompt;
+  document.querySelectorAll("[data-wfid]").forEach(b => {
+    b.className = b.dataset.wfid === id ? "px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-medium text-xs border border-indigo-500 shadow-md transition" : "px-3 py-1.5 rounded-lg bg-zinc-900 text-zinc-300 hover:bg-zinc-800 text-xs border border-zinc-800 transition";
   });
+  refreshUI();
+}
+
+export async function runCurrentWorkflow() {
+  const prompt = document.getElementById("prompt-input").value;
+  if (!prompt) return;
+  state.nodes.forEach(n => { n.status = "PENDING"; n.duration = null; n.data = null; });
+  clearLogs();
+  refreshUI();
+  state.exec = await createExecution(prompt);
+  state.sseCleanup = subscribeExecutionStream(state.exec.execution_id, state.nodes, e => { state.exec = e; refreshUI(); }, refreshUI);
 }
 
 function refreshUI() {
-  state.nodes = buildNodes(state.exec, state.events);
   renderNodes(state.nodes, state.selIdx, idx => { state.selIdx = idx; refreshUI(); });
   renderInspector(state.nodes[state.selIdx]);
-  renderApprovalBar(state.exec, async aid => {
-    await approveRequest(aid);
-    state.exec = await resumeExecution(state.exec.execution_id, aid);
-    refreshUI();
-  }, async aid => {
-    await rejectRequest(aid);
-    state.exec = await fetchExecution(state.exec.execution_id);
-    refreshUI();
-  });
+  const onApprove = async aid => { await approveRequest(aid); state.exec = await resumeExecution(state.exec.execution_id, aid); refreshUI(); };
+  const onReject = async aid => { await rejectRequest(aid); state.exec = await fetchExecution(state.exec.execution_id); refreshUI(); };
+  renderApprovalBar(state.exec, onApprove, onReject);
 }
 
-export async function launchPrompt(prompt) {
-  const exec = await createExecution(prompt);
-  selectExec(exec.execution_id);
-}
-
-window.launchWorkflow = launchPrompt;
-window.selectExecution = selectExec;
+window.selectWorkflow = selectWorkflow;
+window.runCurrentWorkflow = runCurrentWorkflow;
+selectWorkflow("wf-1");
 fetchExecutions().then(list => {
   const sel = document.getElementById("exec-select");
   if (sel && list.length) {
-    sel.innerHTML = list.map(e => `<option value="${e.execution_id}">${e.execution_id} - ${e.status}</option>`).join("");
-    sel.onchange = () => selectExec(sel.value);
-    selectExec(list[0].execution_id);
+    sel.innerHTML = '<option value="">History...</option>' + list.map(id => `<option value="${id}">${id}</option>`).join("");
+    sel.onchange = () => { if (sel.value) subscribeExecutionStream(sel.value, state.nodes, e => { state.exec = e; refreshUI(); }, refreshUI); };
   }
 });

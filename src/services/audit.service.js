@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { auditRepository } from "../repositories/audit.repository.js";
 import { redactSensitiveData } from "../audit/audit.redactor.js";
 import { computeEventHash, GENESIS_HASH } from "../audit/audit.hasher.js";
+import { emitAuditEvent } from "./audit.emitter.js";
 
 const locks = new Map();
 
@@ -30,7 +31,9 @@ export async function recordEvent(params, maxRetries = 10) {
           metadata: redactSensitiveData(params.metadata) || null, duration_ms: params.duration_ms ?? null, previous_event_hash: prevHash
         };
         const event_hash = computeEventHash(payload, prevHash);
-        return await auditRepository.appendEvent({ ...payload, event_hash });
+        const saved = await auditRepository.appendEvent({ ...payload, event_hash });
+        emitAuditEvent(execId, saved);
+        return saved;
       } catch (err) {
         if ((err.code === 11000 || /duplicate/i.test(err.message)) && attempt < maxRetries) {
           await new Promise(r => setTimeout(r, Math.random() * 20 + 5));

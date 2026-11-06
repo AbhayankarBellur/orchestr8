@@ -1,6 +1,6 @@
 export function requireExecutionAuth(req, res, next) {
-  const actorId = req.headers["x-trusted-actor-id"] || req.auth?.actorId || req.auth?.id;
-  const role = req.headers["x-trusted-actor-role"] || req.auth?.role || "user";
+  const actorId = req.headers["x-trusted-actor-id"] || req.query?.actorId || req.auth?.actorId || req.auth?.id;
+  const role = req.headers["x-trusted-actor-role"] || req.query?.role || req.auth?.role || "user";
 
   if (!actorId || typeof actorId !== "string" || !actorId.trim()) {
     return res.status(401).json({

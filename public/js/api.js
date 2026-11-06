@@ -21,15 +21,15 @@ export async function createExecution(message) {
 }
 
 export async function approveRequest(approvalId) {
-  const res = await fetch(`/api/approvals/${approvalId}/decision`, {
-    method: "POST", headers: HEADERS, body: JSON.stringify({ decision: "APPROVED", rationale: "Approved via Viewer" })
+  const res = await fetch(`/api/approvals/${approvalId}/approve`, {
+    method: "POST", headers: HEADERS, body: JSON.stringify({ reason: "Approved via Viewer" })
   });
   return res.json();
 }
 
 export async function rejectRequest(approvalId) {
-  const res = await fetch(`/api/approvals/${approvalId}/decision`, {
-    method: "POST", headers: HEADERS, body: JSON.stringify({ decision: "REJECTED", rationale: "Rejected via Viewer" })
+  const res = await fetch(`/api/approvals/${approvalId}/reject`, {
+    method: "POST", headers: HEADERS, body: JSON.stringify({ reason: "Rejected via Viewer" })
   });
   return res.json();
 }

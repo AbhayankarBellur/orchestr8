@@ -25,7 +25,7 @@ export function findMongoAuditEvents(coll, id, page = 1, limit = 50) {
 }
 
 export async function listMongoAuditExecutions(coll, page = 1, limit = 50) {
-  const ids = await coll.distinct("execution_id");
+  const ids = (await coll.distinct("execution_id")).reverse();
   return ids.slice((page - 1) * limit, page * limit);
 }
 

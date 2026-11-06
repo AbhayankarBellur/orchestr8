@@ -1,14 +1,30 @@
+export function syncNodesWithExec(exec, nodes) {
+  if (!exec) return;
+  const req = nodes.find(n => n.id === "req") || nodes[0];
+  if (req) { req.status = "COMPLETED"; req.input = { message: exec.original_request }; }
+  for (const call of (exec.completed_tool_calls || [])) {
+    const node = nodes.find(n => n.tool === call.tool_name && n.status !== "COMPLETED")
+      || nodes.find(n => n.tool === call.tool_name);
+    if (node) {
+      node.status = "COMPLETED";
+      node.input = call.arguments;
+      node.output = call.result;
+      node.verification = call.verified ? { verified: true } : null;
+    }
+  }
+}
+
 export function renderNodes(nodes, selectedIdx, onSelect) {
   const container = document.getElementById("node-pipeline");
   if (!container) return;
   container.innerHTML = nodes.map((n, i) => {
     const isSel = i === selectedIdx, isLast = i === nodes.length - 1;
     const badge = n.status === "COMPLETED"
-      ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">✓ DONE</span>'
+      ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold">✓ DONE</span>'
       : n.status === "RUNNING"
-      ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-500/20 text-blue-300 border border-blue-500/40 animate-pulse">● ACTIVE</span>'
+      ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-500/20 text-blue-300 border border-blue-500/40 animate-pulse font-bold">● ACTIVE</span>'
       : n.status === "WAITING_FOR_APPROVAL"
-      ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse">⚠️ APPROVAL</span>'
+      ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse font-bold">⚠️ APPROVAL</span>'
       : '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-zinc-800 text-zinc-400 border border-zinc-700">⏳ QUEUED</span>';
 
     const cardBorder = isSel ? "border-indigo-500 shadow-lg shadow-indigo-500/20 bg-zinc-900 ring-2 ring-indigo-500/30"

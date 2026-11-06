@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DecisionOutput",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["decision_version", "status", "intent", "reasoning"],
+  "properties": {
+    "decision_version": { "const": "1.0.0" },
+    "status": {
+      "type": "string",
+      "enum": [
+        "TOOL_PROPOSED",
+        "NO_TOOL_REQUIRED",
+        "CLARIFICATION_REQUIRED",
+        "NO_SUITABLE_TOOL"
+      ]
+    },
+    "intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["description", "entities", "operation"],
+      "properties": {
+        "description": { "type": "string" },
+        "entities": { "type": "array", "items": { "type": "string" } },
+        "operation": { "type": "string" }
+      }
+    },
+    "tool_selection": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": [
+        "server",
+        "tool_name",
+        "arguments",
+        "selection_rationale",
+        "evidence",
+        "alternatives_considered"
+      ],
+      "properties": {
+        "server": { "type": "string" },
+        "tool_name": { "type": "string" },
+        "arguments": { "type": "object" },
+        "selection_rationale": { "type": "string" },
+        "evidence": { "type": "array", "items": { "type": "string" } },
+        "alternatives_considered": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["tool_name", "reason_not_selected"],
+            "properties": {
+              "tool_name": { "type": "string" },
+              "reason_not_selected": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "clarification": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["question", "missing_information"],
+      "properties": {
+        "question": { "type": "string" },
+        "missing_information": { "type": "array", "items": { "type": "string" } },
+        "options": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "reasoning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assumptions", "uncertainties", "risks"],
+      "properties": {
+        "assumptions": { "type": "array", "items": { "type": "string" } },
+        "uncertainties": { "type": "array", "items": { "type": "string" } },
+        "risks": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

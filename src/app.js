@@ -4,6 +4,7 @@ import modelRoutes from "./routes/model.routes.js";
 import agentRoutes from "./routes/agent.routes.js";
 import toolRoutes from "./routes/tool.routes.js";
 import mcpRoutes from "./routes/mcp.routes.js";
+import orchestratorRoutes from "./routes/orchestrator.routes.js";
 import { errorMiddleware } from "./middleware/error.middleware.js";
 
 const app = express();
@@ -14,6 +15,7 @@ app.use("/api/model", modelRoutes);
 app.use("/api/agents", agentRoutes);
 app.use("/api/tools", toolRoutes);
 app.use("/api/mcp", mcpRoutes);
+app.use("/api/orchestrator", orchestratorRoutes);
 app.use(errorMiddleware);
 
 export default app;

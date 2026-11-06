@@ -43,7 +43,7 @@ export async function resumeExecution(execId, approvalId, userResponse) {
 }
 
 export function connectSse(execId, onEvent) {
-  const es = new EventSource(`/api/executions/${execId}/stream?actorId=${ACTOR.actorId}`);
+  const es = new EventSource(`/api/executions/${execId}/stream`);
   es.onmessage = e => { try { onEvent(JSON.parse(e.data)); } catch {} };
   return () => es.close();
 }

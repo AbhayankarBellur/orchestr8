@@ -45,5 +45,5 @@ export async function recordEvent(params, maxRetries = 10) {
   } finally { release(); }
 }
 
-export function getExecutionEvents(id, opt) { return auditRepository.getEventsByExecution(id, opt); }
-export function listExecutions(opt) { return auditRepository.listExecutions(opt); }
+export const getExecutionEvents = (id, opt) => auditRepository.getEventsByExecution(id, opt);
+export const listExecutions = (opt) => auditRepository.listExecutions(opt);

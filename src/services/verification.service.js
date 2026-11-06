@@ -7,7 +7,7 @@ const READ_TOOLS = new Set([
 
 function extractTaskId(res) {
   if (!res || typeof res !== "object") return null;
-  return res.id || res.taskId || res._id || res.data?.id || res.data?.taskId || null;
+  return res.id || res.taskId || res._id || res.task?.id || res.task?._id || res.data?.id || res.data?.taskId || null;
 }
 
 export async function verifyResult({ executionId, proposal, executionResult, executor = null, context = {} }) {

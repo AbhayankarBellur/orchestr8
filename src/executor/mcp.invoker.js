@@ -6,6 +6,8 @@ const MUTATING_TOOLS = new Set([
 ]);
 
 function parseMcpContent(res) {
+  if (res?.structuredContent?.data !== undefined) return res.structuredContent.data;
+  if (res?.structuredContent !== undefined) return res.structuredContent;
   if (!res?.content || !Array.isArray(res.content)) return res;
   const textItems = res.content.filter(c => c.type === "text").map(c => c.text);
   const rawText = textItems.join("\n");

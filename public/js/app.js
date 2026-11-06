@@ -1,10 +1,11 @@
-import { fetchExecutions, fetchExecution, createExecution, approveRequest, rejectRequest, resumeExecution } from "./api.js";
+import { fetchExecution, createExecution, approveRequest, rejectRequest, resumeExecution } from "./api.js";
 import { getWorkflow } from "./workflows.js";
 import { renderNodes } from "./nodes.js";
 import { renderInspector } from "./inspector.js";
 import { renderApprovalBar } from "./approval.js";
 import { clearLogs } from "./console.js";
 import { subscribeExecutionStream } from "./stream.js";
+import { initHistory } from "./history.js";
 
 let state = { wfId: "wf-1", exec: null, nodes: [], selIdx: 0, sseCleanup: null };
 
@@ -38,16 +39,11 @@ function refreshUI() {
   renderInspector(state.nodes[state.selIdx]);
   const onApprove = async aid => { await approveRequest(aid); state.exec = await resumeExecution(state.exec.execution_id, aid); refreshUI(); };
   const onReject = async aid => { await rejectRequest(aid); state.exec = await fetchExecution(state.exec.execution_id); refreshUI(); };
-  renderApprovalBar(state.exec, onApprove, onReject);
+  const onRespond = async text => { state.exec = await resumeExecution(state.exec.execution_id, null, text); refreshUI(); };
+  renderApprovalBar(state.exec, onApprove, onReject, onRespond);
 }
-
-window.selectWorkflow = selectWorkflow;
-window.runCurrentWorkflow = runCurrentWorkflow;
+window.selectWorkflow = selectWorkflow; window.runCurrentWorkflow = runCurrentWorkflow;
 selectWorkflow("wf-1");
-fetchExecutions().then(list => {
-  const sel = document.getElementById("exec-select");
-  if (sel && list.length) {
-    sel.innerHTML = '<option value="">History...</option>' + list.map(id => `<option value="${id}">${id}</option>`).join("");
-    sel.onchange = () => { if (sel.value) subscribeExecutionStream(sel.value, state.nodes, e => { state.exec = e; refreshUI(); }, refreshUI); };
-  }
-});
+initHistory(id => {
+  fetchExecution(id).then(e => { state.exec = e; refreshUI(); });
+  subscribeExecutionStream(id, state.nodes, e => { state.exec = e; refreshUI(); }, refreshUI); });

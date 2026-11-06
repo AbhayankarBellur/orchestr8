@@ -1,5 +1,4 @@
-const ACTOR = { actorId: "admin", role: "admin" };
-const HEADERS = { "Content-Type": "application/json", "x-trusted-actor-id": ACTOR.actorId, "x-trusted-actor-role": ACTOR.role };
+const HEADERS = { "Content-Type": "application/json", "x-trusted-actor-id": "admin", "x-trusted-actor-role": "admin" };
 
 export async function fetchExecutions() {
   const res = await fetch("/api/audit/executions", { headers: HEADERS });
@@ -35,9 +34,10 @@ export async function rejectRequest(approvalId) {
   return res.json();
 }
 
-export async function resumeExecution(execId, approvalId) {
+export async function resumeExecution(execId, approvalId, userResponse) {
+  const body = userResponse ? { user_response: userResponse } : { approval_id: approvalId };
   const res = await fetch(`/api/executions/${execId}/resume`, {
-    method: "POST", headers: HEADERS, body: JSON.stringify({ approval_id: approvalId })
+    method: "POST", headers: HEADERS, body: JSON.stringify(body)
   });
   return (await res.json()).data;
 }

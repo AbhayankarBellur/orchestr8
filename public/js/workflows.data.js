@@ -2,7 +2,7 @@ export const WORKFLOWS_PART1 = [
   {
     id: "wf-1", name: "01 — Project Intelligence",
     description: "Read-only discovery, task & blocker analysis, dashboard and PDF",
-    prompt: "Generate an intelligence report for project Backend Migration",
+    prompt: "Run project intelligence analysis on Backend Migration: discover project, inspect tasks and blockers, render dashboard and PDF report",
     nodes: [
       { id: "req", title: "User Request", icon: "💬", server: "user", tool: "request", status: "PENDING" },
       { id: "p_list", title: "Discover Project", icon: "🔍", server: "taskos", tool: "project_list", status: "PENDING" },

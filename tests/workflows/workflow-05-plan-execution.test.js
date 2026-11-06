@@ -36,16 +36,13 @@ describe("Workflow 05 — Project Plan Execution", () => {
     let exec = await createExecutionService({ message: "Execute RBAC plan" });
     expect(exec.status).toBe("WAITING_FOR_APPROVAL");
     await approveApprovalRequest(exec.pending_approval_id, { id: "lead", role: "lead" }, "Approve task 1");
-
     exec = await resumeExecutionService(exec.execution_id, { approval_id: exec.pending_approval_id });
     expect(exec.status).toBe("WAITING_FOR_APPROVAL");
     await approveApprovalRequest(exec.pending_approval_id, { id: "lead", role: "lead" }, "Approve task 2");
-
     exec = await resumeExecutionService(exec.execution_id, { approval_id: exec.pending_approval_id });
     expect(exec.status).toBe("COMPLETED");
     expect(exec.completed_tool_calls.length).toBe(4);
-    expect(exec.completed_tool_calls.map(c => c.tool_name)).toEqual([
-      "task_create", "task_create", "task_dependency_add", "pdf_generator"
-    ]);
+    expect(exec.completed_tool_calls.map(c => c.tool_name))
+      .toEqual(["task_create", "task_create", "task_dependency_add", "pdf_generator"]);
   });
 });

@@ -11,7 +11,6 @@ export const ExecutionStatusSchema = z.enum([
 
 export const CreateExecutionSchema = z.object({
   message: z.string().min(1),
-  actor: z.record(z.any()).optional().nullable(),
   max_iterations: z.number().int().positive().max(30).optional().default(10),
   max_tool_calls: z.number().int().positive().max(30).optional().default(15)
 });

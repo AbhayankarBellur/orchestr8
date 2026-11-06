@@ -1,46 +1,42 @@
 import { AuditEventSchema } from "../schemas/audit.schema.js";
+import { getDbCollection } from "./mongo.helper.js";
+import * as mongo from "./audit.mongo.js";
+import * as mem from "./audit.memory.js";
 
-const executions = new Map(), sequences = new Map();
+const c = () => getDbCollection("audit_events");
 
 export const auditRepository = {
-  async appendEvent(eventData) {
-    const valid = AuditEventSchema.parse(eventData);
-    const execId = valid.execution_id, list = executions.get(execId) || [];
-    if (list.some(e => e.event_id === valid.event_id)) throw new Error(`Duplicate event ID ${valid.event_id}`);
-    if (list.some(e => e.sequence_number === valid.sequence_number)) throw new Error(`Duplicate sequence ${valid.sequence_number}`);
-
-    list.push(Object.freeze({ ...valid }));
-    executions.set(execId, list);
-    sequences.set(execId, valid.sequence_number);
-    return { ...valid };
+  async appendEvent(data) {
+    const valid = AuditEventSchema.parse(data), coll = c();
+    return coll ? mongo.appendMongoAudit(coll, valid) : mem.appendMemAudit(valid);
   },
-
   async getLatestEvent(id) {
-    const list = executions.get(id) || [];
-    return list.length ? { ...list[list.length - 1] } : null;
+    const coll = c();
+    return coll ? mongo.findLatestMongoAudit(coll, id) : mem.findLatestMemAudit(id);
   },
-
-  async getNextSequence(id) { return (sequences.get(id) || 0) + 1; },
-
-  async getEventsByExecution(id, { page = 1, limit = 50 } = {}) {
-    const list = executions.get(id) || [], start = (page - 1) * limit;
-    return list.slice(start, start + limit).map(e => ({ ...e }));
+  async getNextSequence(id) {
+    const latest = await this.getLatestEvent(id);
+    return latest ? latest.sequence_number + 1 : 1;
   },
-
-  async listExecutions({ page = 1, limit = 50 } = {}) {
-    const ids = Array.from(executions.keys()), start = (page - 1) * limit;
-    return ids.slice(start, start + limit);
+  async getEventsByExecution(id, opt = {}) {
+    const coll = c(), p = opt.page || 1, l = opt.limit || 50;
+    return coll ? mongo.findMongoAuditEvents(coll, id, p, l) : mem.findMemAuditEvents(id, p, l);
   },
-
-  _tamper(id, idx, patch) {
-    const list = executions.get(id);
-    if (list && list[idx]) list[idx] = { ...list[idx], ...patch };
+  async listExecutions(opt = {}) {
+    const coll = c(), p = opt.page || 1, l = opt.limit || 50;
+    return coll ? mongo.listMongoAuditExecutions(coll, p, l) : mem.listMemAuditExecutions(p, l);
   },
-
-  _remove(id, idx) {
-    const list = executions.get(id);
-    if (list) list.splice(idx, 1);
+  async _tamper(id, idx, patch) {
+    const coll = c();
+    return coll ? mongo.tamperMongoAudit(coll, id, idx, patch) : mem.tamperMemAudit(id, idx, patch);
   },
-
-  async clear() { executions.clear(); sequences.clear(); }
+  async _remove(id, idx) {
+    const coll = c();
+    return coll ? mongo.removeMongoAudit(coll, id, idx) : mem.removeMemAudit(id, idx);
+  },
+  async clear() {
+    const coll = c();
+    if (coll) await coll.deleteMany({});
+    mem.clearMemAudit();
+  }
 };

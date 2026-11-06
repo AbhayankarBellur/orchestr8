@@ -5,7 +5,8 @@ import { resumeExecutionService } from "../services/orchestration.resume.js";
 export async function createExecution(req, res, next) {
   try {
     const valid = CreateExecutionSchema.parse(req.body);
-    const data = await createExecutionService({ ...valid, actor: req.auth || valid.actor });
+    const actor = { id: req.auth.actorId, role: req.auth.role, type: req.auth.type || "user" };
+    const data = await createExecutionService({ ...valid, actor });
     res.status(201).json({ success: true, data });
   } catch (err) { next(err); }
 }

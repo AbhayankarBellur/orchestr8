@@ -1,6 +1,7 @@
 import dns from "node:dns";
 import { MongoClient } from "mongodb";
 import { env } from "./environment.js";
+import { ensureCollectionIndexes } from "../repositories/mongo.helper.js";
 
 try { dns.setServers(["8.8.8.8", "1.1.1.1"]); } catch {}
 
@@ -10,6 +11,7 @@ let database;
 export async function connectDatabase() {
   await client.connect();
   database = client.db(env.DB_NAME);
+  await ensureCollectionIndexes(database);
   return database;
 }
 
@@ -20,4 +22,5 @@ export function getDatabase() {
 
 export async function closeDatabase() {
   await client.close();
+  database = null;
 }

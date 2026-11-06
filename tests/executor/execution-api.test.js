@@ -18,14 +18,14 @@ describe("Execution API Endpoints", () => {
 
   it("POST /api/executions starts run and GET returns status and events", async () => {
     vi.spyOn(modelService, "structuredRaw").mockResolvedValueOnce({ model: "m", content: dec("NO_TOOL_REQUIRED") });
-    const postRes = await request(app).post("/api/executions").send({ message: "Hello" });
+    const postRes = await request(app).post("/api/executions").set("x-trusted-actor-id", "u1").send({ message: "Hello" });
     expect(postRes.status).toBe(201);
     const execId = postRes.body.data.execution_id;
 
-    const getRes = await request(app).get(`/api/executions/${execId}`);
+    const getRes = await request(app).get(`/api/executions/${execId}`).set("x-trusted-actor-id", "u1");
     expect(getRes.body.data.status).toBe("COMPLETED");
 
-    const eventsRes = await request(app).get(`/api/executions/${execId}/events`);
+    const eventsRes = await request(app).get(`/api/executions/${execId}/events`).set("x-trusted-actor-id", "u1");
     expect(eventsRes.body.data.length).toBeGreaterThan(0);
     expect(eventsRes.body.data[0].event_type).toBe("EXECUTION_CREATED");
   });
@@ -41,7 +41,7 @@ describe("Execution API Endpoints", () => {
     });
     vi.spyOn(modelService, "structuredRaw").mockResolvedValueOnce({ model: "m", content: dec("NO_TOOL_REQUIRED") });
 
-    const res = await request(app).post("/api/executions/exec_wait_user/resume").send({ user_response: "Project A" });
+    const res = await request(app).post("/api/executions/exec_wait_user/resume").set("x-trusted-actor-id", "u1").send({ user_response: "Project A" });
     expect(res.status).toBe(200);
     expect(res.body.data.status).toBe("COMPLETED");
   });

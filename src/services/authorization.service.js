@@ -1,6 +1,7 @@
 import { getApprovalRequest } from "./approval.service.js";
 import { computeActionFingerprint } from "../approval/approval.fingerprint.js";
 import { approvalRepository } from "../repositories/approval.repository.js";
+import { recordApprovalTransition } from "./audit.helpers.js";
 
 const makeErr = (msg, status) => Object.assign(new Error(msg), { status, statusCode: status });
 
@@ -35,6 +36,7 @@ export async function consumeAuthorization(approvalId, proposedAction, currentSn
     status: "CONSUMED", consumed_at
   });
   if (!updated) throw makeErr("Authorization already consumed or state changed", 409);
+  await recordApprovalTransition(approval.execution_id, "AUTHORIZATION_CONSUMED", updated);
 
   return {
     consumed: true, approval_id: approvalId,

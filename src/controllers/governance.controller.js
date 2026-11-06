@@ -19,13 +19,13 @@ export function updatePolicy(req, res, next) {
   } catch (err) { next(err); }
 }
 
-export function evaluateProposal(req, res, next) {
+export async function evaluateProposal(req, res, next) {
   try {
     const { proposal, context, snapshot_id } = req.body;
     if (!proposal || typeof proposal !== "object") {
       return res.status(400).json({ success: false, error: "Valid proposal object required" });
     }
-    const result = service.evaluateProposalService(proposal, context || {}, snapshot_id);
+    const result = await service.evaluateProposalService(proposal, context || {}, snapshot_id);
     res.json({ success: true, data: result });
   } catch (err) { next(err); }
 }

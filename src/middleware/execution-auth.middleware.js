@@ -1,6 +1,16 @@
 export function requireExecutionAuth(req, res, next) {
-  const actorId = req.headers["x-trusted-actor-id"] || req.query?.actorId || req.auth?.actorId || req.auth?.id;
-  const role = req.headers["x-trusted-actor-role"] || req.query?.role || req.auth?.role || "user";
+  const headerActor = req.headers["x-trusted-actor-id"];
+  const headerRole = req.headers["x-trusted-actor-role"];
+
+  if (req.method !== "GET" && (!headerActor || typeof headerActor !== "string" || !headerActor.trim())) {
+    return res.status(401).json({
+      success: false,
+      message: "Authentication required: missing trusted identity header"
+    });
+  }
+
+  const actorId = headerActor || req.query?.actorId || req.auth?.actorId;
+  const role = headerRole || (headerActor ? req.auth?.role || "user" : "viewer");
 
   if (!actorId || typeof actorId !== "string" || !actorId.trim()) {
     return res.status(401).json({
@@ -12,7 +22,7 @@ export function requireExecutionAuth(req, res, next) {
   req.auth = {
     actorId: String(actorId).trim(),
     role: String(role).trim(),
-    type: "user"
+    type: headerActor ? "user" : "stream_viewer"
   };
   next();
 }

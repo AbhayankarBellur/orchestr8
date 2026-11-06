@@ -1,4 +1,4 @@
-import { fetchExecutions, fetchExecution, createExecution, approveRequest, rejectRequest, resumeExecution, connectSse } from "./api.js";
+import { fetchExecutions, fetchExecution, fetchEvents, createExecution, approveRequest, rejectRequest, resumeExecution, connectSse } from "./api.js";
 import { buildNodes, renderNodes } from "./nodes.js";
 import { renderInspector } from "./inspector.js";
 import { renderApprovalBar } from "./approval.js";
@@ -8,8 +8,7 @@ let state = { exec: null, events: [], nodes: [], selIdx: 0, sseCleanup: null };
 async function selectExec(id) {
   if (state.sseCleanup) state.sseCleanup();
   state.exec = await fetchExecution(id);
-  const evRes = await fetch(`/api/executions/${id}/events?actorId=admin&role=admin`).then(r => r.json());
-  state.events = evRes.data || [];
+  state.events = await fetchEvents(id);
   refreshUI();
   state.sseCleanup = connectSse(id, evt => {
     state.events.push(evt);

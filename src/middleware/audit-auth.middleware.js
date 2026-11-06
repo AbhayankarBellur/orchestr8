@@ -1,8 +1,8 @@
 export function requireAuditAccess(req, res, next) {
-  const actorId = req.headers["x-trusted-actor-id"] || req.query?.actorId || req.auth?.actorId;
-  const role = req.headers["x-trusted-actor-role"] || req.query?.role || req.auth?.role || "user";
+  const actorId = req.headers["x-trusted-actor-id"];
+  const role = req.headers["x-trusted-actor-role"];
 
-  if (!actorId) {
+  if (!actorId || typeof actorId !== "string" || !actorId.trim()) {
     return res.status(401).json({ success: false, message: "Authentication required" });
   }
 
